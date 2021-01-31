@@ -1,4 +1,3 @@
-import sqlite3
 import datetime
 
 
@@ -6,34 +5,30 @@ class Task:
     """
     Класс "Задачи".
     Отвечает за создание событий и операций с ними.
-    Включает в себя конструктор и классовые атрибуты.
+    Включает в себя конструктор и классовый атрибут.
     """
 
-    data_base = "tracker.db"
     task_table_name = "current_tasks"
 
-    def __init__(self, date: str, event: str):
+    def __init__(self, conn, date: str, event: str):
+        self.conn = conn
         self.date = date
         self.event = event
         self.status = "to_be_done"
 
-    @classmethod
-    def check_db_func(cls):
+    def check_db_func(self):
         """
-        Вспомогательный классовый метод.
+        Вспомогательный объектный метод.
         Отвечает за выборку из таблицы БД для проверки на входжение.
         Используется во множестве методов объекта класса.
         :return: метод возвращает объект класс List - список кортежей, в которых собраны все записи
         из таблий БД, по которому происходит проверка на вхождение.
         """
-        conn = sqlite3.connect(cls.data_base)
-        cur = conn.cursor()
 
-        query_select = f"SELECT * FROM {cls.task_table_name}"
+        cur = self.conn.cursor()
+
+        query_select = f"SELECT * FROM {self.task_table_name}"
         check_lst = [row for row in cur.execute(query_select)]
-
-        cur.close()
-        conn.close()
 
         return check_lst
 
@@ -44,16 +39,12 @@ class Task:
         Принзак "активности" события для объекта указан и протавляется по умолчанию - "to_be_done".
         :return: метод ничего не возвращает.
         """
-        conn = sqlite3.connect(self.data_base)
-        cur = conn.cursor()
+        cur = self.conn.cursor()
 
-        if (self.date, self.event, self.status) not in Task.check_db_func():
+        if (self.date, self.event, self.status) not in Task.check_db_func(self):
             query_inset = f"INSERT INTO {self.task_table_name} VALUES(?, ?, ?)"
             cur.execute(query_inset, (self.date, self.event, self.status))
-            conn.commit()
-
-        cur.close()
-        conn.close()
+            self.conn.commit()
 
     def event_update_to_done(self, new_status: str):
         """
@@ -65,19 +56,16 @@ class Task:
         :param new_status: "done" - занчение, на которое требуется изменить статус.
         :return: метод ничего не возвращает.
         """
-        conn = sqlite3.connect(self.data_base)
-        cur = conn.cursor()
 
-        if (self.date, self.event, self.status) in Task.check_db_func():
+        cur = self.conn.cursor()
+
+        if (self.date, self.event, self.status) in Task.check_db_func(self):
             query_update = f"UPDATE {self.task_table_name} SET status = ? WHERE date = ? AND event = ?"
             cur.execute(query_update, (new_status, self.date, self.event))
-            conn.commit()
+            self.conn.commit()
             print("Deleted successfully")
         else:
             print("Event not found")
-
-        cur.close()
-        conn.close()
 
     def event_update_by_date(self, new_status: str):
         """
@@ -90,48 +78,44 @@ class Task:
         :param new_status: "done" - занчение, на которое требуется изменить статус
         :return: метод ничего не возвращает.
         """
-        conn = sqlite3.connect(self.data_base)
-        cur = conn.cursor()
+
+        cur = self.conn.cursor()
 
         counter = 0
-        for row in Task.check_db_func():
+        for row in Task.check_db_func(self):
             if row[0] == self.date and row[2] == "to_be_done":
                 query_update = f"UPDATE {self.task_table_name} SET status = ? WHERE date = ?"
                 cur.execute(query_update, (new_status, self.date))
-                conn.commit()
+                self.conn.commit()
                 counter += 1
         print(f"Deleted {counter} event" if counter == 1 else f"Deleted {counter} events")
-
-        cur.close()
-        conn.close()
 
 
 class User:
     """
     Класс "Пользователь".
     Отвечает за операции печати и удаление объетов класса Task (событий).
-    Не имеет конструктора.
-    Имеет классовые атрибуты.
-    Содержит исключительно классовые методы.
+    Включает в себя конструктор и классовый атрибут.
     """
 
-    data_base = "tracker.db"
     task_table_name = "current_tasks"
 
-    @classmethod
-    def print_event_by_date(cls, date):
+    def __init__(self, conn):
+        self.conn = conn
+
+    def print_event_by_date(self, date):
         """
-        Классовый метод.
+        Объектный метод.
         Отвечает за печать всех событий за указанную дату и находящихся
         в списке "активных событий" (т.е. имеющих статус - "to_be_done").
         Резутат выводится в отсортированном виде.
         :param date: занчение, на которое требуется изменить дату.
         :return: метод ничего не возвращает.
         """
-        conn = sqlite3.connect(cls.data_base)
-        cur = conn.cursor()
 
-        query_select = f"SELECT event FROM {cls.task_table_name} WHERE date = ? AND status = 'to_be_done'"
+        cur = self.conn.cursor()
+
+        query_select = f"SELECT event FROM {self.task_table_name} WHERE date = ? AND status = 'to_be_done'"
         event_lst = sorted([row[0] for row in cur.execute(query_select, (date, ))])
 
         if not event_lst:
@@ -140,13 +124,9 @@ class User:
             for event in event_lst:
                 print(event)
 
-        cur.close()
-        conn.close()
-
-    @classmethod
-    def print_all_events(cls):
+    def print_all_events(self):
         """
-        Классовый метод.
+        Объектный метод.
         Отвечает за печать всех событий находящихся
         в списке "активных событий" (т.е. имеющих статус - "to_be_done").
         Резутат выводится в отсортированном виде.
@@ -154,10 +134,10 @@ class User:
         Пример: если дата: 1-2-3, то вернется 0001-02-03
         :return: метод ничего не возвращает.
         """
-        conn = sqlite3.connect(cls.data_base)
-        cur = conn.cursor()
 
-        query_select = f"SELECT date, event FROM {cls.task_table_name} WHERE status = 'to_be_done'"
+        cur = self.conn.cursor()
+
+        query_select = f"SELECT date, event FROM {self.task_table_name} WHERE status = 'to_be_done'"
         event_lst = sorted([row for row in cur.execute(query_select)])
         if not event_lst:
             print("No events")
@@ -167,41 +147,34 @@ class User:
                 date = datetime.date(int(date[0]), int(date[1]), int(date[2]))
                 print(date, event[1])
 
-        cur.close()
-        conn.close()
+    # def print_all_from_table(self):
+    #     """
+    #     НЕ ПО ТЗ.
+    #     Классовый метод.
+    #     Временный, технический метод, печатает все записи таблицы БД, вне зависимости от статуса.
+    #     :return: метод ничего не возвращает.
+    #     """
+    #     cur = self.conn.cursor()
+    #
+    #     query_select = f"SELECT * FROM {self.task_table_name}"
+    #     for row in cur.execute(query_select):
+    #         print(row)
 
-    @classmethod
-    def print_all_from_table(cls):
-        """
-        НЕ ПО ТЗ.
-        Классовый метод.
-        Временный, технический метод, печатает все записи таблицы БД, вне зависимости от статуса.
-        :return: метод ничего не возвращает.
-        """
-        conn = sqlite3.connect(cls.data_base)
-        cur = conn.cursor()
-
-        query_select = f"SELECT * FROM {cls.task_table_name}"
-        for row in cur.execute(query_select):
-            print(row)
-
-        cur.close()
-        conn.close()
-
-    @classmethod
-    def del_all_from_table(cls):
-        """
-        НЕ ПО ТЗ.
-        Классовый метод.
-        Временный, технический метод, удаляет все записи таблицы БД.
-        :return:
-        """
-        conn = sqlite3.connect(cls.data_base)
-        cur = conn.cursor()
-
-        query_delete = f"DELETE FROM {cls.task_table_name}"
-        cur.execute(query_delete)
-        conn.commit()
-
-        cur.close()
-        conn.close()
+    #
+    # @classmethod
+    # def del_all_from_table(cls):
+    #     """
+    #     НЕ ПО ТЗ.
+    #     Классовый метод.
+    #     Временный, технический метод, удаляет все записи таблицы БД.
+    #     :return:
+    #     """
+    #     conn = sqlite3.connect(cls.data_base)
+    #     cur = conn.cursor()
+    #
+    #     query_delete = f"DELETE FROM {cls.task_table_name}"
+    #     cur.execute(query_delete)
+    #     conn.commit()
+    #
+    #     cur.close()
+    #     conn.close()
