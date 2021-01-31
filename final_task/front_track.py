@@ -25,9 +25,6 @@ def main():
 
     cur.close()
 
-# User.del_all_from_table()
-# User.print_all_from_table()
-
     while True:
 
         start = input("Введите команду (StartApp/Quit): ")

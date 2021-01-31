@@ -146,35 +146,3 @@ class User:
                 date = event[0].split("-")
                 date = datetime.date(int(date[0]), int(date[1]), int(date[2]))
                 print(date, event[1])
-
-    # def print_all_from_table(self):
-    #     """
-    #     НЕ ПО ТЗ.
-    #     Классовый метод.
-    #     Временный, технический метод, печатает все записи таблицы БД, вне зависимости от статуса.
-    #     :return: метод ничего не возвращает.
-    #     """
-    #     cur = self.conn.cursor()
-    #
-    #     query_select = f"SELECT * FROM {self.task_table_name}"
-    #     for row in cur.execute(query_select):
-    #         print(row)
-
-    #
-    # @classmethod
-    # def del_all_from_table(cls):
-    #     """
-    #     НЕ ПО ТЗ.
-    #     Классовый метод.
-    #     Временный, технический метод, удаляет все записи таблицы БД.
-    #     :return:
-    #     """
-    #     conn = sqlite3.connect(cls.data_base)
-    #     cur = conn.cursor()
-    #
-    #     query_delete = f"DELETE FROM {cls.task_table_name}"
-    #     cur.execute(query_delete)
-    #     conn.commit()
-    #
-    #     cur.close()
-    #     conn.close()
