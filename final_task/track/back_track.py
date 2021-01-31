@@ -30,6 +30,8 @@ class Task:
         query_select = f"SELECT * FROM {self.task_table_name}"
         check_lst = [row for row in cur.execute(query_select)]
 
+        cur.close()
+
         return check_lst
 
     def add_event(self):
@@ -45,6 +47,8 @@ class Task:
             query_inset = f"INSERT INTO {self.task_table_name} VALUES(?, ?, ?)"
             cur.execute(query_inset, (self.date, self.event, self.status))
             self.conn.commit()
+
+        cur.close()
 
     def event_update_to_done(self, new_status: str):
         """
@@ -66,6 +70,8 @@ class Task:
             print("Deleted successfully")
         else:
             print("Event not found")
+
+        cur.close()
 
     def event_update_by_date(self, new_status: str):
         """
@@ -89,6 +95,8 @@ class Task:
                 self.conn.commit()
                 counter += 1
         print(f"Deleted {counter} event" if counter == 1 else f"Deleted {counter} events")
+
+        cur.close()
 
 
 class User:
@@ -124,6 +132,8 @@ class User:
             for event in event_lst:
                 print(event)
 
+        cur.close()
+
     def print_all_events(self):
         """
         Объектный метод.
@@ -146,3 +156,5 @@ class User:
                 date = event[0].split("-")
                 date = datetime.date(int(date[0]), int(date[1]), int(date[2]))
                 print(date, event[1])
+
+        cur.close()
